@@ -3,7 +3,7 @@ import { useState } from 'react';
 type CounterProps = {};
 type VoidFun = () => void;
 
-const Couter = ({}: CounterProps): JSX.Element => {
+const Counter = ({}: CounterProps): JSX.Element => {
   const [count, setCount] = useState<number>(0);
   const add: VoidFun = () => {
     setCount(count + 1);
@@ -24,4 +24,4 @@ const Couter = ({}: CounterProps): JSX.Element => {
   );
 };
 
-export default Couter;
+export default Counter;
