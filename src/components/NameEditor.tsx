@@ -1,17 +1,17 @@
 import { useState } from 'react';
 
-type NameEditporProps = {
+type NameEditorProps = {
   children?: React.ReactNode;
 };
-
-const NameEditor = ({}: NameEditporProps): JSX.Element => {
+const NameEditor = ({}: NameEditorProps): JSX.Element => {
   const [name, setName] = useState<string>('');
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setName(e.target.value);
   };
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      console.log('Enter 입력함');
+      console.log('Enter 입력함.');
       setName('');
     }
   };
@@ -21,7 +21,7 @@ const NameEditor = ({}: NameEditporProps): JSX.Element => {
   };
   return (
     <div>
-      <h2>NameEditor: {name}</h2>
+      <h2>NameEditor : {name}</h2>
       <div>
         <input
           type="text"

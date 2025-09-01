@@ -1,358 +1,700 @@
-# Context API와 useReducer
+# full-calendar
 
-- useState를 대체하고 props를 줄여보자
+- https://fullcalendar.io/docs/getting-started
 
-## 1. 기본폴더 구성 및 파일구조
+## 1. 설치
 
-- /src/contexts 폴더 생성
-- /src/contexts/TodoContext.jsx 생성
-
-```jsx
-import { createContext, useContext, useReducer } from 'react';
-
-// 1. 초기값
-const initialState = {
-  todos: [],
-};
-// 2. 리듀서
-// action 은 {type:"문자열", payload: 재료 } 형태
-function reducer(state, action) {
-  switch (action.type) {
-    case 'ADD': {
-      const { todo } = action.payload;
-      return { ...state, todos: [todo, ...state.todos] };
-    }
-    case 'TOGGLE': {
-      const { id } = action.payload;
-      const arr = state.todos.map(item =>
-        item.id === id ? { ...item, completed: !item.completed } : item,
-      );
-      return { ...state, todos: arr };
-    }
-    case 'DELETE': {
-      const { id } = action.payload;
-      const arr = state.todos.filter(item => item.id !== id);
-      return { ...state, todos: arr };
-    }
-    case 'EDIT': {
-      const { id, title } = action.payload;
-      const arr = state.todos.map(item => (item.id === id ? { ...item, title } : item));
-      return { ...state, todos: arr };
-    }
-    default:
-      return state;
-  }
-}
-// 3. context 생성
-const TodoContext = createContext();
-// 4. provider 생성
-export const TodoProvider = ({ children }) => {
-  const [state, dispatch] = useReducer(reducer, initialState);
-
-  // dispatch 를 위한 함수 표현식 모음
-  const addTodo = newTodo => {
-    dispatch({ type: 'ADD', payload: { todo: newTodo } });
-  };
-  const toggleTodo = id => {
-    dispatch({ type: 'TOGGLE', payload: { id } });
-  };
-  const deleteTodo = id => {
-    dispatch({ type: 'DELETE', payload: { id } });
-  };
-  const editTodo = (id, editTitle) => {
-    dispatch({ type: 'EDIT', payload: { id, title: editTitle } });
-  };
-
-  // value 전달할 값
-  const value = {
-    todos: state.todos,
-    addTodo,
-    toggleTodo,
-    deleteTodo,
-    editTodo,
-  };
-  return <TodoContext.Provider value={value}>{children}</TodoContext.Provider>;
-};
-
-// 5. custom hook 생성
-export function useTodos() {
-  const ctx = useContext(TodoContext);
-  if (!ctx) {
-    throw new Error('컨텍스트가 없어요.');
-  }
-  return ctx;
-}
+```bash
+npm i @fullcalendar/react @fullcalendar/core \
+      @fullcalendar/daygrid @fullcalendar/timegrid \
+      @fullcalendar/interaction @fullcalendar/list
 ```
 
-- App.tsx
+## 2. 폴더 및 파일 구조
+
+- `/src/pages/Calendar.tsx 파일` 생성
+- 최초 월 달력 출력하기
 
 ```tsx
-import TodoList from './components/todos/TodoList';
-import TodoWrite from './components/todos/TodoWrite';
-import { TodoProvider } from './contexts/TodoContext';
+import React from 'react';
+// full screen 관련
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
 
-function App() {
+function Calendar() {
   return (
     <div>
-      <h1>할일 웹서비스</h1>
-      <TodoProvider>
-        <div>
-          <TodoWrite />
-          <TodoList />
-        </div>
-      </TodoProvider>
-    </div>
-  );
-}
-
-export default App;
-```
-
-- TodoWirte.tsx
-
-```tsx
-import { useState } from 'react';
-import type { TodoType } from '../../types/TodoType';
-import { useTodos } from '../../contexts/TodoContext';
-
-type TodoWriteProps = {
-  children?: React.ReactNode;
-};
-const TodoWrite = ({}: TodoWriteProps): JSX.Element => {
-  // Context 를 사용함.
-  const { addTodo } = useTodos();
-
-  const [title, setTitle] = useState<string>('');
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    setTitle(e.target.value);
-  };
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
-    if (e.key === 'Enter') {
-      handleSave();
-    }
-  };
-  const handleSave = (): void => {
-    if (title.trim()) {
-      // 업데이트 시키기
-      const newTodo: TodoType = { id: Date.now().toString(), title: title, completed: false };
-      addTodo(newTodo);
-      setTitle('');
-    }
-  };
-
-  return (
-    <div>
-      <h2>할일 작성</h2>
+      <h2>Full Calendar</h2>
       <div>
-        <input
-          type="text"
-          value={title}
-          onChange={e => handleChange(e)}
-          onKeyDown={e => handleKeyDown(e)}
-        />
-        <button onClick={handleSave}>등록</button>
+        {/* dayGridPlugin :  월 달력 플러그 인, initialView :  `월`로 보기 */}
+        <FullCalendar plugins={[dayGridPlugin]} initialView="dayGridMonth" height={'auto'} />
       </div>
     </div>
   );
-};
+}
 
-export default TodoWrite;
+export default Calendar;
 ```
 
-- TodoList.tsx
+- 일정 출력 및 날짜 선택시 상세 내용 보기
 
 ```tsx
-import { useTodos } from '../../contexts/TodoContext';
-import type { TodoType } from '../../types/TodoType';
-import TodoItem from './TodoItem';
+import React, { useState } from 'react';
+// full screen 관련
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import type { EventClickArg } from '@fullcalendar/core/index.js';
 
-type TodoListProps = {};
-
-const TodoList = ({}: TodoListProps): JSX.Element => {
-  const { todos } = useTodos();
-
+function Calendar() {
+  const [events, setEvents] = useState([
+    { id: '1', title: '우리반 운동회', start: '2025-09-03', allDay: true },
+    { id: '2', title: '과학 실험', start: '2025-09-05T10:00:00', end: '2025-09-05T11:00:00' },
+  ]);
+  // 일정 상세 보기
+  const handleClick = (info: EventClickArg) => {
+    // console.log(info.event.title);
+    alert(`제목 : ${info.event.title} 입니다.`);
+  };
   return (
     <div>
-      <h2>TodoList</h2>
-      <ul>
-        {todos.map((item: any) => (
-          <TodoItem key={item.id} todo={item} />
-        ))}
-      </ul>
+      <h2>Full Calendar</h2>
+      <div>
+        {/* dayGridPlugin :  월 달력 플러그 인, initialView :  `월`로 보기 */}
+        <FullCalendar
+          plugins={[dayGridPlugin]}
+          initialView="dayGridMonth"
+          events={events} // 일정 출력
+          eventClick={e => handleClick(e)}
+          height={'auto'}
+        />
+      </div>
     </div>
   );
-};
+}
 
-export default TodoList;
+export default Calendar;
 ```
 
-- TodoItem.tsx
+- 일정 추가하기
 
 ```tsx
-import { useState } from 'react';
-import type { TodoType } from '../../types/TodoType';
-import { useTodos } from '../../contexts/TodoContext';
+import React, { useState } from 'react';
+// full screen 관련
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import interactionPlugin from '@fullcalendar/interaction';
+import type { DateSelectArg, EventClickArg } from '@fullcalendar/core/index.js';
 
-type TodoItemProps = {
-  todo: TodoType;
-};
+// full calendar 에 입력시 들어오는 데이터 모양
+import type { EventInput } from '@fullcalendar/core/index.js';
 
-const TodoItem = ({ todo }: TodoItemProps): JSX.Element => {
-  const { toggleTodo, editTodo, deleteTodo } = useTodos();
-  // 수정중인지
-  const [isEdit, setIsEdit] = useState<boolean>(false);
-  const [editTitle, setEditTitle] = useState<string>(todo.title);
-  const handleChangeTitle = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    setEditTitle(e.target.value);
+function Calendar() {
+  const [events, setEvents] = useState<EventInput[]>([
+    { id: '1', title: '우리반 운동회', start: '2025-09-03', allDay: true },
+    { id: '2', title: '과학 실험', start: '2025-09-05T10:00:00', end: '2025-09-05T11:00:00' },
+  ]);
+  // 일정 상세 보기
+  const handleClick = (info: EventClickArg) => {
+    // console.log(info.event.title);
+    alert(`제목 : ${info.event.title} 입니다.`);
   };
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
-    if (e.key === 'Enter') {
-      handleEditSave();
+  // 빈 날짜 선택 처리
+  const handleSelect = (e: DateSelectArg) => {
+    console.log(e);
+    // 내용 입력창을 만들어 봄.
+    // 웹브라우저 prompt 로 일단 처리
+    const title = prompt('일정의 제목을 입력하세요.') || '';
+    const calendarData = e.view.calendar;
+    console.log(calendarData);
+
+    if (!title.trim()) {
+      alert('제목을 입력하세요.');
+      return;
     }
-  };
-  const handleEditSave = (): void => {
-    if (editTitle.trim()) {
-      editTodo(todo.id, editTitle);
-      // setEditTitle(''); // 필요없음
-      setIsEdit(false);
-    }
-  };
-  const handleEditCancel = (): void => {
-    setEditTitle(todo.title);
-    setIsEdit(false);
+
+    const newEvent = {
+      id: String(Date.now()),
+      title,
+      start: e.start,
+      allDay: e.allDay,
+      end: e.end,
+    };
+    setEvents([...events, { ...newEvent }]);
   };
   return (
-    <li>
-      {isEdit ? (
-        <>
-          <input
-            type="text"
-            value={editTitle}
-            onChange={e => handleChangeTitle(e)}
-            onKeyDown={e => handleKeyDown(e)}
-          />
-          <button onClick={handleEditSave}>저장</button>
-          <button onClick={handleEditCancel}>취소</button>
-        </>
-      ) : (
-        <>
-          <input type="checkbox" checked={todo.completed} onChange={() => toggleTodo(todo.id)} />
-          <span>{todo.title}</span>
-          <button onClick={() => setIsEdit(true)}>수정</button>
-          <button onClick={() => deleteTodo(todo.id)}>삭제</button>
-        </>
-      )}
-    </li>
+    <div>
+      <h2>Full Calendar</h2>
+      <div>
+        {/* dayGridPlugin :  월 달력 플러그 인, initialView :  `월`로 보기 */}
+        {/* interactionPlugin :  클릭 및 드래그 관련 플러그인 */}
+        <FullCalendar
+          plugins={[dayGridPlugin, interactionPlugin]}
+          initialView="dayGridMonth"
+          events={events} // 일정 출력
+          eventClick={e => handleClick(e)} // 날짜선택 내용 출력
+          selectable={true} // 날짜를 선택할 수 있게 활성화
+          selectMirror={true}
+          select={e => handleSelect(e)}
+          height={'auto'}
+        />
+      </div>
+    </div>
   );
-};
+}
 
-export default TodoItem;
+export default Calendar;
 ```
 
-## 2. TodoContext.jsx 마이그레이션
-
-- 확장자 `tsx` 로 변경
-- import 를 다시 실행
-- TodoContext.tsx
+- 드래그 해서 일정 수정하기 : `editable={true/false}`
 
 ```tsx
-import React, { createContext, useContext, useReducer, type PropsWithChildren } from 'react';
-import type { TodoType } from '../types/TodoType';
+import React, { useState } from 'react';
+// full screen 관련
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import interactionPlugin from '@fullcalendar/interaction';
+import type { DateSelectArg, EventClickArg } from '@fullcalendar/core/index.js';
 
-// 1. 초기값
-type TodosState = { todos: TodoType[] };
-const initialState: TodosState = {
-  todos: [],
-};
-// 2. 리듀서
-// action 은 {type:"문자열", payload: 재료 } 형태
-enum TodoActionType {
-  ADD = 'ADD',
-  DELETE = 'DELETE',
-  TOGGLE = 'TOGGLE',
-  EDIT = 'EDIT',
+// full calendar 에 입력시 들어오는 데이터 모양
+import type { EventInput } from '@fullcalendar/core/index.js';
+
+function Calendar() {
+  const [events, setEvents] = useState<EventInput[]>([
+    { id: '1', title: '우리반 운동회', start: '2025-09-03', allDay: true },
+    { id: '2', title: '과학 실험', start: '2025-09-05T10:00:00', end: '2025-09-05T11:00:00' },
+  ]);
+  // 일정 상세 보기
+  const handleClick = (info: EventClickArg) => {
+    // console.log(info.event.title);
+    alert(`제목 : ${info.event.title} 입니다.`);
+  };
+  // 빈 날짜 선택 처리
+  const handleSelect = (e: DateSelectArg) => {
+    console.log(e);
+    // 내용 입력창을 만들어 봄.
+    // 웹브라우저 prompt 로 일단 처리
+    const title = prompt('일정의 제목을 입력하세요.') || '';
+    const calendarData = e.view.calendar;
+    console.log(calendarData);
+
+    if (!title.trim()) {
+      alert('제목을 입력하세요.');
+      return;
+    }
+
+    const newEvent = {
+      id: String(Date.now()),
+      title,
+      start: e.start,
+      allDay: e.allDay,
+      end: e.end,
+    };
+    setEvents([...events, { ...newEvent }]);
+  };
+  return (
+    <div>
+      <h2>Full Calendar</h2>
+      <div>
+        {/* dayGridPlugin :  월 달력 플러그 인, initialView :  `월`로 보기 */}
+        {/* interactionPlugin :  클릭 및 드래그 관련 플러그인 */}
+        <FullCalendar
+          plugins={[dayGridPlugin, interactionPlugin]}
+          initialView="dayGridMonth"
+          events={events} // 일정 출력
+          eventClick={e => handleClick(e)} // 날짜선택 내용 출력
+          selectable={true} // 날짜를 선택할 수 있게 활성화
+          selectMirror={true}
+          select={e => handleSelect(e)}
+          editable={true} // 드래그로 수정
+          height={'auto'}
+        />
+      </div>
+    </div>
+  );
 }
 
-type AddAction = { type: TodoActionType.ADD; payload: { todo: TodoType } };
-type DeleteAction = { type: TodoActionType.DELETE; payload: { id: string } };
-type ToggleAction = { type: TodoActionType.TOGGLE; payload: { id: string } };
-type EditAction = { type: TodoActionType.EDIT; payload: { id: string; title: string } };
+export default Calendar;
+```
 
-function reducer(state: TodosState, action: AddAction | DeleteAction | ToggleAction | EditAction) {
-  switch (action.type) {
-    case TodoActionType.ADD: {
-      const { todo } = action.payload;
-      return { ...state, todos: [todo, ...state.todos] };
+- 주/일 버튼 처리하기(도구모음)
+
+```tsx
+import React, { useState } from 'react';
+// full screen 관련
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import listPlugin from '@fullcalendar/list';
+import interactionPlugin from '@fullcalendar/interaction';
+import type { DateSelectArg, EventClickArg } from '@fullcalendar/core/index.js';
+
+// full calendar 에 입력시 들어오는 데이터 모양
+import type { EventInput } from '@fullcalendar/core/index.js';
+
+function Calendar() {
+  const [events, setEvents] = useState<EventInput[]>([
+    { id: '1', title: '우리반 운동회', start: '2025-09-03', allDay: true },
+    { id: '2', title: '과학 실험', start: '2025-09-05T10:00:00', end: '2025-09-05T11:00:00' },
+  ]);
+  // 일정 상세 보기
+  const handleClick = (info: EventClickArg) => {
+    // console.log(info.event.title);
+    alert(`제목 : ${info.event.title} 입니다.`);
+  };
+  // 빈 날짜 선택 처리
+  const handleSelect = (e: DateSelectArg) => {
+    console.log(e);
+    // 내용 입력창을 만들어 봄.
+    // 웹브라우저 prompt 로 일단 처리
+    const title = prompt('일정의 제목을 입력하세요.') || '';
+    const calendarData = e.view.calendar;
+    console.log(calendarData);
+
+    if (!title.trim()) {
+      alert('제목을 입력하세요.');
+      return;
     }
-    case TodoActionType.TOGGLE: {
-      const { id } = action.payload;
-      const arr = state.todos.map(item =>
-        item.id === id ? { ...item, completed: !item.completed } : item,
+
+    const newEvent = {
+      id: String(Date.now()),
+      title,
+      start: e.start,
+      allDay: e.allDay,
+      end: e.end,
+    };
+    setEvents([...events, { ...newEvent }]);
+  };
+  // 헤더 도구 상자
+  const headerToolbar = {
+    left: 'prev,next today',
+    center: 'title',
+    right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek',
+  };
+  return (
+    <div>
+      <h2>Full Calendar</h2>
+      <div>
+        {/* dayGridPlugin :  월 달력 플러그 인, initialView :  `월`로 보기 */}
+        {/* interactionPlugin :  클릭 및 드래그 관련 플러그인 */}
+        {/* timeGridPlugin :  시간순 출력 관련 플러그인 */}
+        {/* listPlugin :  목록 출력 관련 플러그인 */}
+        <FullCalendar
+          plugins={[dayGridPlugin, interactionPlugin, timeGridPlugin, listPlugin]}
+          initialView="dayGridMonth"
+          events={events} // 일정 출력
+          headerToolbar={headerToolbar}
+          eventClick={e => handleClick(e)} // 날짜선택 내용 출력
+          selectable={true} // 날짜를 선택할 수 있게 활성화
+          selectMirror={true}
+          select={e => handleSelect(e)}
+          editable={true} // 드래그로 수정
+          height={'auto'}
+        />
+      </div>
+    </div>
+  );
+}
+
+export default Calendar;
+```
+
+- 한국어/한국시간 처리하기
+
+```tsx
+import React, { useState } from 'react';
+// full screen 관련
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import listPlugin from '@fullcalendar/list';
+import interactionPlugin from '@fullcalendar/interaction';
+import type { DateSelectArg, EventClickArg } from '@fullcalendar/core/index.js';
+// 한국어
+import koLocale from '@fullcalendar/core/locales/ko';
+// full calendar 에 입력시 들어오는 데이터 모양
+import type { EventInput } from '@fullcalendar/core/index.js';
+
+function Calendar() {
+  const [events, setEvents] = useState<EventInput[]>([
+    { id: '1', title: '우리반 운동회', start: '2025-09-03', allDay: true },
+    { id: '2', title: '과학 실험', start: '2025-09-05T10:00:00', end: '2025-09-05T11:00:00' },
+  ]);
+  // 일정 상세 보기
+  const handleClick = (info: EventClickArg) => {
+    // console.log(info.event.title);
+    alert(`제목 : ${info.event.title} 입니다.`);
+  };
+  // 빈 날짜 선택 처리
+  const handleSelect = (e: DateSelectArg) => {
+    console.log(e);
+    // 내용 입력창을 만들어 봄.
+    // 웹브라우저 prompt 로 일단 처리
+    const title = prompt('일정의 제목을 입력하세요.') || '';
+    const calendarData = e.view.calendar;
+    console.log(calendarData);
+
+    if (!title.trim()) {
+      alert('제목을 입력하세요.');
+      return;
+    }
+
+    const newEvent = {
+      id: String(Date.now()),
+      title,
+      start: e.start,
+      allDay: e.allDay,
+      end: e.end,
+    };
+    setEvents([...events, { ...newEvent }]);
+  };
+  // 헤더 도구 상자
+  const headerToolbar = {
+    left: 'prev,next today',
+    center: 'title',
+    right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek',
+  };
+  return (
+    <div>
+      <h2>Full Calendar</h2>
+      <div>
+        {/* dayGridPlugin :  월 달력 플러그 인, initialView :  `월`로 보기 */}
+        {/* interactionPlugin :  클릭 및 드래그 관련 플러그인 */}
+        {/* timeGridPlugin :  시간순 출력 관련 플러그인 */}
+        {/* listPlugin :  목록 출력 관련 플러그인 */}
+        <FullCalendar
+          plugins={[dayGridPlugin, interactionPlugin, timeGridPlugin, listPlugin]}
+          initialView="dayGridMonth"
+          events={events} // 일정 출력
+          headerToolbar={headerToolbar}
+          locale={koLocale} // 한국어
+          timeZone="Asia/Seoul" // 한국 시간
+          slotMinTime="06:00:00" // 아침 6시부터
+          slotMaxTime="22:00:00" // 밤 10시까지
+          nowIndicator={true} // 현재 시간 빨간 선
+          eventClick={e => handleClick(e)} // 날짜선택 내용 출력
+          selectable={true} // 날짜를 선택할 수 있게 활성화
+          selectMirror={true}
+          select={e => handleSelect(e)}
+          editable={true} // 드래그로 수정
+          height={'auto'}
+        />
+      </div>
+    </div>
+  );
+}
+
+export default Calendar;
+```
+
+- 하루에 최대 출력 가능 개수 : (더 많으면 more 출력)
+- dayMaxEvents={3} // 최대 미리보기 개수
+
+```tsx
+import React, { useState } from 'react';
+// full screen 관련
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import listPlugin from '@fullcalendar/list';
+import interactionPlugin from '@fullcalendar/interaction';
+import type { DateSelectArg, EventClickArg } from '@fullcalendar/core/index.js';
+// 한국어
+import koLocale from '@fullcalendar/core/locales/ko';
+// full calendar 에 입력시 들어오는 데이터 모양
+import type { EventInput } from '@fullcalendar/core/index.js';
+
+function Calendar() {
+  const [events, setEvents] = useState<EventInput[]>([
+    { id: '1', title: '우리반 운동회', start: '2025-09-03', allDay: true },
+    { id: '2', title: '우리반 운동회', start: '2025-09-03', allDay: true },
+    { id: '3', title: '우리반 운동회', start: '2025-09-03', allDay: true },
+    { id: '4', title: '우리반 운동회', start: '2025-09-03', allDay: true },
+    { id: '5', title: '우리반 운동회', start: '2025-09-03', allDay: true },
+    { id: '6', title: '우리반 운동회', start: '2025-09-03', allDay: true },
+    { id: '7', title: '과학 실험', start: '2025-09-05T10:00:00', end: '2025-09-05T11:00:00' },
+  ]);
+  // 일정 상세 보기
+  const handleClick = (info: EventClickArg) => {
+    // console.log(info.event.title);
+    alert(`제목 : ${info.event.title} 입니다.`);
+  };
+  // 빈 날짜 선택 처리
+  const handleSelect = (e: DateSelectArg) => {
+    console.log(e);
+    // 내용 입력창을 만들어 봄.
+    // 웹브라우저 prompt 로 일단 처리
+    const title = prompt('일정의 제목을 입력하세요.') || '';
+    const calendarData = e.view.calendar;
+    console.log(calendarData);
+
+    if (!title.trim()) {
+      alert('제목을 입력하세요.');
+      return;
+    }
+
+    const newEvent = {
+      id: String(Date.now()),
+      title,
+      start: e.start,
+      allDay: e.allDay,
+      end: e.end,
+    };
+    setEvents([...events, { ...newEvent }]);
+  };
+  // 헤더 도구 상자
+  const headerToolbar = {
+    left: 'prev,next today',
+    center: 'title',
+    right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek',
+  };
+  return (
+    <div>
+      <h2>Full Calendar</h2>
+      <div>
+        {/* dayGridPlugin :  월 달력 플러그 인, initialView :  `월`로 보기 */}
+        {/* interactionPlugin :  클릭 및 드래그 관련 플러그인 */}
+        {/* timeGridPlugin :  시간순 출력 관련 플러그인 */}
+        {/* listPlugin :  목록 출력 관련 플러그인 */}
+        <FullCalendar
+          plugins={[dayGridPlugin, interactionPlugin, timeGridPlugin, listPlugin]}
+          initialView="dayGridMonth"
+          events={events} // 일정 출력
+          headerToolbar={headerToolbar}
+          locale={koLocale} // 한국어
+          timeZone="Asia/Seoul" // 한국 시간
+          slotMinTime="06:00:00" // 아침 6시부터
+          slotMaxTime="22:00:00" // 밤 10시까지
+          nowIndicator={true} // 현재 시간 빨간 선
+          dayMaxEvents={3} // 최대 미리보기 개수
+          eventClick={e => handleClick(e)} // 날짜선택 내용 출력
+          selectable={true} // 날짜를 선택할 수 있게 활성화
+          selectMirror={true}
+          select={e => handleSelect(e)}
+          editable={true} // 드래그로 수정
+          height={'auto'}
+        />
+      </div>
+    </div>
+  );
+}
+
+export default Calendar;
+```
+
+- 일정 삭제하기 : (useState 업데이트 )
+
+```tsx
+const arr = events.filter(item => item.title !== info.event.title);
+setEvents(arr);
+```
+
+- 일정 별로 색상을 다르게 표현하기
+
+```tsx
+const [events, setEvents] = useState<EventInput[]>([
+  {
+    id: '1',
+    title: '우리반 운동회1',
+    start: '2025-09-03',
+    allDay: true,
+    color: '#ff7f50', // 배경 및 글자 기본 색상
+    textColor: '#f00', // 글자 색상
+    borderColor: '#cc3300', // 테두리 색상
+  },
+  { id: '2', title: '우리반 운동회2', start: '2025-09-03', allDay: true },
+  { id: '7', title: '과학 실험', start: '2025-09-05T10:00:00', end: '2025-09-05T11:00:00' },
+]);
+```
+
+- 일정 기본 색상을 지정하기
+
+```tsx
+<FullCalendar
+  ...
+  eventColor="#90ee90" // 기본 이벤트 배경색상
+  eventTextColor="#000" // 기본 글자색상
+  eventBorderColor="#008000" // 기본 테두리색상
+/>
+```
+
+- 클래스로 일정 색상 통일하기 : (카테고리별로 처리하기)
+
+```css
+/* CSS */
+.sports-event {
+  background-color: #f08080 !important;
+  color: #fff !important;
+}
+.science-event {
+  background-color: #4682b4 !important;
+  color: #fff !important;
+}
+```
+
+```tsx
+const [events, setEvents] = useState<EventInput[]>([
+  {
+    id: '1',
+    title: '우리반 운동회1',
+    start: '2025-09-03',
+    allDay: true,
+    color: '#ff7f50', // 배경 및 글자 기본 색상
+    textColor: '#f00', // 글자 색상
+    borderColor: '#cc3300', // 테두리 색상
+  },
+  {
+    id: '2',
+    title: '우리반 운동회2',
+    start: '2025-09-03',
+    allDay: true,
+    classNames: ['sports-event'],
+  },
+  {
+    id: '7',
+    title: '과학 실험',
+    start: '2025-09-05T10:00:00',
+    end: '2025-09-05T11:00:00',
+    className: ['science-event'],
+  },
+]);
+```
+
+- 아이콘 및 JSX 출력하기
+
+```tsx
+ eventContent={e => {
+      return (
+            <>
+            <div style={{ backgroundColor: 'yellowgreen', padding: '20px' }}>
+            <b>😍 {e.event.title}</b>
+            </div>
+            </>
       );
-      return { ...state, todos: arr };
+}}
+```
+
+- 전체 코드
+
+```tsx
+import React, { useState } from 'react';
+// full screen 관련
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import listPlugin from '@fullcalendar/list';
+import interactionPlugin from '@fullcalendar/interaction';
+import type { DateSelectArg, EventClickArg } from '@fullcalendar/core/index.js';
+// 한국어
+import koLocale from '@fullcalendar/core/locales/ko';
+// full calendar 에 입력시 들어오는 데이터 모양
+import type { EventInput } from '@fullcalendar/core/index.js';
+
+function Calendar() {
+  const [events, setEvents] = useState<EventInput[]>([
+    {
+      id: '1',
+      title: '우리반 운동회1',
+      start: '2025-09-03',
+      allDay: true,
+      color: '#ff7f50', // 배경 및 글자 기본 색상
+      textColor: '#f00', // 글자 색상
+      borderColor: '#cc3300', // 테두리 색상
+    },
+    {
+      id: '2',
+      title: '우리반 운동회2',
+      start: '2025-09-03',
+      allDay: true,
+      classNames: ['sports-event'],
+    },
+    {
+      id: '7',
+      title: '과학 실험',
+      start: '2025-09-05T10:00:00',
+      end: '2025-09-05T11:00:00',
+      className: ['science-event'],
+    },
+  ]);
+  // 일정 상세 보기
+  const handleClick = (info: EventClickArg) => {
+    // console.log(info.event.title);
+    // alert(`제목 : ${info.event.title} 입니다.`);
+    // 삭제한다면? (useState 업데이트하면 됨)
+    const arr = events.filter(item => item.title !== info.event.title);
+    setEvents(arr);
+  };
+  // 빈 날짜 선택 처리
+  const handleSelect = (e: DateSelectArg) => {
+    console.log(e);
+    // 내용 입력창을 만들어 봄.
+    // 웹브라우저 prompt 로 일단 처리
+    const title = prompt('일정의 제목을 입력하세요.') || '';
+    const calendarData = e.view.calendar;
+    console.log(calendarData);
+
+    if (!title.trim()) {
+      alert('제목을 입력하세요.');
+      return;
     }
-    case TodoActionType.DELETE: {
-      const { id } = action.payload;
-      const arr = state.todos.filter(item => item.id !== id);
-      return { ...state, todos: arr };
-    }
-    case TodoActionType.EDIT: {
-      const { id, title } = action.payload;
-      const arr = state.todos.map(item => (item.id === id ? { ...item, title } : item));
-      return { ...state, todos: arr };
-    }
-    default:
-      return state;
-  }
+
+    const newEvent = {
+      id: String(Date.now()),
+      title,
+      start: e.start,
+      allDay: e.allDay,
+      end: e.end,
+    };
+    setEvents([...events, { ...newEvent }]);
+  };
+  // 헤더 도구 상자
+  const headerToolbar = {
+    left: 'prev,next today',
+    center: 'title',
+    right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek',
+  };
+  return (
+    <div>
+      <h2>Full Calendar</h2>
+      <div>
+        {/* dayGridPlugin :  월 달력 플러그 인, initialView :  `월`로 보기 */}
+        {/* interactionPlugin :  클릭 및 드래그 관련 플러그인 */}
+        {/* timeGridPlugin :  시간순 출력 관련 플러그인 */}
+        {/* listPlugin :  목록 출력 관련 플러그인 */}
+        <FullCalendar
+          plugins={[dayGridPlugin, interactionPlugin, timeGridPlugin, listPlugin]}
+          initialView="dayGridMonth"
+          events={events} // 일정 출력
+          headerToolbar={headerToolbar}
+          locale={koLocale} // 한국어
+          timeZone="Asia/Seoul" // 한국 시간
+          slotMinTime="06:00:00" // 아침 6시부터
+          slotMaxTime="22:00:00" // 밤 10시까지
+          nowIndicator={true} // 현재 시간 빨간 선
+          dayMaxEvents={3} // 최대 미리보기 개수
+          eventClick={e => handleClick(e)} // 날짜선택 내용 출력
+          selectable={true} // 날짜를 선택할 수 있게 활성화
+          selectMirror={true}
+          select={e => handleSelect(e)}
+          editable={true} // 드래그로 수정
+          height={'auto'}
+          eventColor="#90ee90" // 기본 이벤트 배경색상
+          eventTextColor="#000" // 기본 글자색상
+          eventBorderColor="#008000" // 기본 테두리색상
+          // JSX 출력하기
+          eventContent={e => {
+            return (
+              <>
+                <div style={{ backgroundColor: 'yellowgreen', padding: '20px' }}>
+                  <b>😍 {e.event.title}</b>
+                </div>
+              </>
+            );
+          }}
+        />
+      </div>
+    </div>
+  );
 }
-// 3. context 생성
-//  만들어진 Context 가 관리하는 Value 의 모양
-type TodoContextValue = {
-  todos: TodoType[];
-  addTodo: (todo: TodoType) => void;
-  toggleTodo: (id: string) => void;
-  deleteTodo: (id: string) => void;
-  editTodo: (id: string, editTitle: string) => void;
-};
-const TodoContext = createContext<TodoContextValue | null>(null);
 
-// 4. provider 생성
-
-export const TodoProvider: React.FC<PropsWithChildren> = ({ children }): JSX.Element => {
-  const [state, dispatch] = useReducer(reducer, initialState);
-
-  // dispatch 를 위한 함수 표현식 모음
-  const addTodo = (newTodo: TodoType) => {
-    dispatch({ type: TodoActionType.ADD, payload: { todo: newTodo } });
-  };
-  const toggleTodo = (id: string) => {
-    dispatch({ type: TodoActionType.TOGGLE, payload: { id } });
-  };
-  const deleteTodo = (id: string) => {
-    dispatch({ type: TodoActionType.DELETE, payload: { id } });
-  };
-  const editTodo = (id: string, editTitle: string) => {
-    dispatch({ type: TodoActionType.EDIT, payload: { id, title: editTitle } });
-  };
-
-  // value 전달할 값
-  const value: TodoContextValue = {
-    todos: state.todos,
-    addTodo,
-    toggleTodo,
-    deleteTodo,
-    editTodo,
-  };
-  return <TodoContext.Provider value={value}>{children}</TodoContext.Provider>;
-};
-
-// 5. custom hook 생성
-export function useTodos(): TodoContextValue {
-  const ctx = useContext(TodoContext);
-  if (!ctx) {
-    throw new Error('컨텍스트가 없어요.');
-  }
-  return ctx;
-}
+export default Calendar;
 ```

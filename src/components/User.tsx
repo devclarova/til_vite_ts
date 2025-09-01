@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-
 type UserProps = {
   children?: React.ReactNode;
   name: string;
@@ -9,6 +8,7 @@ export type UserType = {
   name: string;
   age: number;
 };
+
 const User = ({ name, age }: UserProps): JSX.Element => {
   const [user, setUser] = useState<UserType | null>(null);
   const handleClick = (): void => {
@@ -22,7 +22,7 @@ const User = ({ name, age }: UserProps): JSX.Element => {
   return (
     <div>
       <h2>
-        User:{' '}
+        User :{' '}
         {user ? (
           <span>
             {user.name}님의 나이는 {user.age}살 입니다.

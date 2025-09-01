@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { TodoType } from '../../types/TodoType';
 import { useTodos } from '../../contexts/TodoContext';
 
