@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
+// CRA의 환경변수 호출과는 형식이 다름.
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
