@@ -9,10 +9,14 @@ import {
 
 type TodoItemProps = {
   todo: Todo;
+  index: number;
 };
 
-const TodoItem = ({ todo }: TodoItemProps): JSX.Element => {
-  const { toggleTodo, editTodo, deleteTodo } = useTodos();
+const TodoItem = ({ todo, index }: TodoItemProps): JSX.Element => {
+  const { toggleTodo, editTodo, deleteTodo, currentPage, itemsPerPage, totalCount } = useTodos();
+  // 순서번호 매기기
+  const globalIndex = totalCount - ((currentPage - 1) * itemsPerPage + index);
+
   // 수정중인지
   const [isEdit, setIsEdit] = useState<boolean>(false);
   const [editTitle, setEditTitle] = useState<string>(todo.title);
@@ -24,7 +28,7 @@ const TodoItem = ({ todo }: TodoItemProps): JSX.Element => {
       handleEditSave();
     }
   };
-  // 비동기로 DB에 update 한다.
+  // 비동기로 DB 에 update 한다.
   const handleEditSave = async (): Promise<void> => {
     if (!editTitle.trim()) {
       alert('제목을 입력하세요.');
@@ -32,10 +36,11 @@ const TodoItem = ({ todo }: TodoItemProps): JSX.Element => {
     }
 
     try {
-      // DB의 내용 업데이트
+      // DB 의  내용 업데이트
       const result = await updateTodoService(todo.id, { title: editTitle });
+
       if (result) {
-        // context의 state.todos의 항목 1개의 타이틀 수정
+        // context 의 state.todos 의 항목 1개의 타이틀 수정
         editTodo(todo.id, editTitle);
         setIsEdit(false);
       }
@@ -51,23 +56,23 @@ const TodoItem = ({ todo }: TodoItemProps): JSX.Element => {
   // 비동기 통신으로 toggle 업데이트
   const handleToggle = async (): Promise<void> => {
     try {
-      // DB의 completed가 업데이트 성공 시 Todo 타입 리턴
+      // db 의 completed 가 업데이트 성공시 Todo 타입 리턴
       const result = await toggleTodoService(todo.id, !todo.completed);
       if (result) {
-        // context의 state.todos의 1개 항목 completed 업데이트
+        // context 의  state.todos 의 1개 항목 completed 업데이트
         toggleTodo(todo.id);
       }
     } catch (error) {
-      console.log('데이터베이스 Toggle이 실패하였습니다.', error);
+      console.log('데이터베이스 Toggle 이 실패하였어요.', error);
     }
   };
 
-  // DB의 데이터 delete
+  // db 의 데이터 delete
   const handleDelete = async (): Promise<void> => {
     try {
-      // DB 삭제 기능
+      // db 삭제기능
       await deleteTodoService(todo.id);
-      // state 삭제 기능
+      // state 삭제기능
       deleteTodo(todo.id);
     } catch (error) {
       console.log('DB 삭제가 실패하였습니다.', error);
@@ -76,6 +81,8 @@ const TodoItem = ({ todo }: TodoItemProps): JSX.Element => {
 
   return (
     <li>
+      {/* 출력 번호 */}
+      <span>{globalIndex}</span>
       {isEdit ? (
         <>
           <input
@@ -92,7 +99,7 @@ const TodoItem = ({ todo }: TodoItemProps): JSX.Element => {
           <input type="checkbox" checked={todo.completed} onChange={handleToggle} />
           <span>{todo.title}</span>
           <button onClick={() => setIsEdit(true)}>수정</button>
-          <button onClick={handleDelete}>삭제</button>
+          <button onClick={() => handleDelete()}>삭제</button>
         </>
       )}
     </li>
