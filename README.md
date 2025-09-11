@@ -478,6 +478,6 @@ export function useTodos(): TodoContextValue {
 
 ### 2.3. 페이지네이션을 위한 컴포넌트 생성
 
-- /src/components/pagination.tsx 생성
+- /src/components/pagination.tsx 생성 (재활용 할 수 있으므로)
 
 ### 2.3. /src/pages/TodosPage.tsx
