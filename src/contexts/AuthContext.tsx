@@ -121,10 +121,10 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
       // account_deletion_requests 에  Pending 으로 Insert 합니다.
       // 등록할 삭제 데이터
       const deleteInfo: DeleteRequestInsert = {
-        user_email: user?.email as string,
         user_id: user?.id,
         reason: '사용자 요청',
         status: 'pending',
+        user_email: user?.email as string,
       };
       const { error: deleteRequestsError } = await supabase
         .from('account_deletion_requests')
