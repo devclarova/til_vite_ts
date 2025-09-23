@@ -15,6 +15,19 @@ import { supabase } from './supabase';
 // 사용자 프로필 생성
 const createProfile = async (newUserProfile: ProfileInsert): Promise<boolean> => {
   try {
+    // 인증 상태 확인
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !sessionData.session) {
+      console.log('프로필 생성 실패 : 인증되지 않은 사용자');
+      return false;
+    }
+
+    // 현재 사용자 ID와  프로필 ID가 일치하는지 확인
+    if (sessionData.session.user.id !== newUserProfile.id) {
+      console.log('프로필 생성 실패 : 사용자 ID 불일치');
+      return false;
+    }
+
     const { error, data } = await supabase.from('profiles').insert([{ ...newUserProfile }]);
     if (error) {
       console.log(`프로필 추가에 실패 : `, {
@@ -25,7 +38,7 @@ const createProfile = async (newUserProfile: ProfileInsert): Promise<boolean> =>
       });
       return false;
     }
-    console.log(`프로필 생성 성공:`, data);
+    console.log(`프로필 생성 성공 : `, data);
     return true;
   } catch (error) {
     console.log(`프로필 생성 오류 : ${error}`);
@@ -158,27 +171,27 @@ const cleanupUserAvatars = async (userId: string): Promise<boolean> => {
 // 사용자 프로필 이미지 제거
 const removeAvatar = async (userId: string): Promise<boolean> => {
   try {
-    // 현재 로그인 한 사용자의 avatar_url을 읽어와야 합니다.
-    // 여기서 파일명을 추출함
+    // 현재 로그인 한 사용자의 avartar_url 을 읽어와야 합니다.
+    // 여기서 파일명을 추출함.
     const profile = await getProfile(userId);
-    // 사용자가 avatar_url이 없다면
+    // 사용자가 avatar_url 이 없다면
     if (!profile?.avatar_url) {
       return true; // 작업완료
     }
-    // 1. 만약 avatar_url이 존재하면 이름 파악, 파일 삭제
+    // 1. 만약 avatar_url 이 존재하면 이름 파악, 파일 삭제
     let deleteSuccess = false;
 
     try {
-      // url에 파일명을 찾아야 함 (url로 변환하면 path와 파일 구분 수월)
+      // url 에 파일명을 찾아야 함. (url 로 변환하면 path 와 파일구분 수월함)
       const url = new URL(profile.avatar_url);
       const pathParts = url.pathname.split('/');
       const publicIndex = pathParts.indexOf('public');
       if (publicIndex !== -1 && publicIndex + 1 < pathParts.length) {
         const bucketName = pathParts[publicIndex + 1];
         const filePath = pathParts.slice(publicIndex + 2).join('/');
-        // 실제로 찾아낸 bucketName과 filePath로 삭제
-        const {} = await supabase.storage.from(bucketName).remove([filePath]);
-        if (Error) {
+        // 실제로 찾아낸 bucketName 과  filePath 로 삭제
+        const { data, error } = await supabase.storage.from(bucketName).remove([filePath]);
+        if (error) {
           throw new Error('파일을 찾았지만, 삭제에는 실패했어요.');
         }
         // 파일 삭제 성공
@@ -187,13 +200,15 @@ const removeAvatar = async (userId: string): Promise<boolean> => {
     } catch (err) {
       console.log(err);
     }
-    // 2. 만약 avatar_url을 제대로 파싱 못했다면?
+
+    // 2. 만약 avatar_url 을 제대로 파싱 못했다면?
     if (!deleteSuccess) {
       try {
-        // 전체 목록을 일단 읽어옴
+        // 전체 목록을 일단 읽어옴.
         const { data: files, error: listError } = await supabase.storage
           .from('user-images')
           .list('avatars', { limit: 1000 });
+
         if (!listError && files && files.length > 0) {
           const userFiles = files.filter(item => item.name.startsWith(`${userId}-`));
           if (userFiles.length > 0) {
