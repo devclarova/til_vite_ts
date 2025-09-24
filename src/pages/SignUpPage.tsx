@@ -1,16 +1,14 @@
 import React, { useState } from 'react';
+import KakaoLoginButton from '../components/KakaoLoginButton';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import { createProfile } from '../lib/profile';
-import type { ProfileInsert } from '../types/TodoType';
-import KakaoLoginButton from '../components/KakaoLoginButton';
+import GoogleLoginButton from '../components/GoogleLoginButton';
 
 function SignUpPage() {
   const { signUp, checkEmailExists, checkNicknameExists } = useAuth();
 
   const [email, setEmail] = useState<string>('');
   const [pw, setPw] = useState<string>('');
-  // 추가 정보 (닉네임)
   const [nickName, setNickName] = useState<string>('');
   const [msg, setMsg] = useState<string>('');
 
@@ -37,13 +35,14 @@ function SignUpPage() {
       setEmailCheckStatus('taken');
       return;
     }
-    // 입력된 글자가 email 형식에 맞는지 정규 표현식으로 검사
+    // 입력된 글자가 email 형식에 맞는지 정규표현식으로 검사
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setEmailCheckMessage('올바른 이메일 형식을 입력해주세요.');
       setEmailCheckStatus('taken');
       return;
     }
+
     setEmailCheckStatus('checking');
     setEmailCheckMessage('이메일 중복 확인 중...');
     try {
@@ -68,7 +67,7 @@ function SignUpPage() {
   // 닉네임 중복 확인 함수
   const handleNicknameCheck = async () => {
     if (!nickName.trim()) {
-      setNicknameCheckMessage('닉네임을 입력해주세요.');
+      setNicknameCheckMessage('닉네임을 입력해 주세요.');
       setNicknameCheckStatus('taken');
       return;
     }
@@ -80,16 +79,16 @@ function SignUpPage() {
     setNicknameCheckStatus('checking');
     setNicknameCheckMessage('닉네임 중복 확인 중...');
     try {
-      // DB에 직접 이메일 글자를 보내고 중복확인 진행
+      // DB 에 직접 닉네임 글자를 보내고 중복확인 진행.
       const result = await checkNicknameExists(nickName);
       if (result.error) {
         setNicknameCheckMessage(`오류 : ${result.error}`);
         setNicknameCheckStatus('taken');
       } else if (result.exists) {
-        setNicknameCheckMessage('이미 사용 중인 이메일입니다.');
+        setNicknameCheckMessage('이미 사용 중인 닉네임입니다.');
         setNicknameCheckStatus('taken');
       } else {
-        setNicknameCheckMessage('사용 가능한 이메일입니다.');
+        setNicknameCheckMessage('사용 가능한 닉네임입니다.');
         setNicknameCheckStatus('available');
       }
     } catch (error) {
@@ -169,10 +168,10 @@ function SignUpPage() {
                 }}
                 placeholder="이메일"
                 className="form-input"
-                required
                 style={{ flex: 1 }}
+                required
               />
-              {/* 이메일 중복체크 버튼태그 */}
+              {/* 이메일 중복체크버튼태그 */}
               <button
                 type="button"
                 onClick={handleEmailCheck}
@@ -186,10 +185,10 @@ function SignUpPage() {
                   cursor: emailCheckStatus === 'checking' ? 'not-allowed' : 'pointer',
                   fontSize: '14px',
                   whiteSpace: 'nowrap',
-                  opacity: emailCheckStatus === 'checking' ? '0.6' : 1,
+                  opacity: emailCheckStatus === 'checking' ? 0.6 : 1,
                 }}
               >
-                {emailCheckStatus === 'checking' ? '확인 중...' : '중복확인'}
+                {emailCheckStatus === 'checking' ? '확인중...' : '중복확인'}
               </button>
             </div>
             {/* 이메일 체크 결과 메시지 영역 */}
@@ -243,7 +242,7 @@ function SignUpPage() {
                 style={{ flex: 1 }}
                 required
               />
-              {/* 닉네임 중복체크 버튼태그 */}
+              {/* 닉네임 중복체크버튼태그 */}
               <button
                 type="button"
                 onClick={handleNicknameCheck}
@@ -260,7 +259,7 @@ function SignUpPage() {
                   opacity: nicknameCheckStatus === 'checking' ? 0.6 : 1,
                 }}
               >
-                {nicknameCheckStatus === 'checking' ? '확인 중...' : '중복확인'}
+                {nicknameCheckStatus === 'checking' ? '확인중...' : '중복확인'}
               </button>
             </div>
             {/* 닉네임 체크 결과 메시지 영역 */}
@@ -353,19 +352,27 @@ function SignUpPage() {
             </div>
           )}
         </form>
+
         {/* SNS 로그인 영역 */}
-        <div style={{ display: 'flex', alignItems: 'center', margin: 'var(--space-6)' }}>
-          <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--gray-300' }}></div>
-          <span style={{ padding: '0 var(--spave-4)', fontSize: '14px' }}>또는</span>
-          <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--gray-300' }}></div>
+        <div style={{ display: 'flex', alignItems: 'center', margin: 'var(--space-6) 0' }}>
+          <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--gray-300)' }}></div>
+          <span style={{ padding: '0 var(--space-4)', fontSize: '14px' }}>또는</span>
+          <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--gray-300)' }}></div>
         </div>
-        {/* 카카오 로그인 버튼: 오류 메세지는 사용자도 볼 수 있어야 함 */}
+
+        {/* 카카오 로그인 버튼 : 오류 메시지는 사용자도 볼 수 있어야 함.*/}
         <KakaoLoginButton
-          onError={error => setMsg(`카카오 로그인 오류: ${error}`)}
+          onError={error => setMsg(`카카오 로그인 오류 : ${error}`)}
           onSuccess={message => setMsg(message)}
         />
-
-        {/* 메세지 출력 */}
+        {/* 구글 로그인 버튼 :  오류 메시지는 사용자도 볼 수 있어야 함.  */}
+        <div style={{ marginTop: 'var(--space-3)' }}>
+          <GoogleLoginButton
+            onError={error => setMsg(`구글 로그인 오류 : ${error}`)}
+            onSuccess={message => setMsg(message)}
+          />
+        </div>
+        {/* 메시지 출력 */}
         {msg && (
           <p
             style={{
@@ -380,7 +387,6 @@ function SignUpPage() {
             {msg}
           </p>
         )}
-        <p>{msg}</p>
       </div>
     </div>
   );
