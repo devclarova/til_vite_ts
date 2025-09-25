@@ -7,17 +7,20 @@ import HomePage from './pages/HomePage';
 import ProfilePage from './pages/ProfilePage';
 import SignInPage from './pages/SignInPage';
 import SignUpPage from './pages/SignUpPage';
+import TodoDetailPage from './pages/TodoDetailPage';
+import TodoEditPage from './pages/TodoEditPage';
 import TodoListPage from './pages/TodoListPage';
 import TodosInfinitePage from './pages/TodosInfinitePage';
 import TodoWritePage from './pages/TodoWritePage';
-import TodoEditPage from './pages/TodoEditPage';
-import TodoDetailPage from './pages/TodoDetailPage';
+import DirectChatPage from './pages/chat/DirectChatPage';
+// 1:1 채팅 관련 css
+import './components/chat/chat.css';
 
 const TopBar = () => {
   const { signOut, user } = useAuth();
   // 관리자인 경우 메뉴 추가로 출력하기
   // isAdmin 에는 true/false
-  const isAdmin = user?.email === 'azsx7111@naver.com';
+  const isAdmin = user?.email === 'tarolong@naver.com';
 
   return (
     <nav className="nav">
@@ -42,6 +45,11 @@ const TopBar = () => {
       {!user && (
         <Link to="/signin" className="nav-link">
           로그인
+        </Link>
+      )}
+      {user && (
+        <Link to="/chat" className="nav-link">
+          1 : 1 채팅
         </Link>
       )}
       {user && (
@@ -138,6 +146,15 @@ function App() {
               element={
                 <Protected>
                   <AdminPage />
+                </Protected>
+              }
+            />
+            {/* 1 : 1 채팅 페이지 */}
+            <Route
+              path="/chat"
+              element={
+                <Protected>
+                  <DirectChatPage />
                 </Protected>
               }
             />
