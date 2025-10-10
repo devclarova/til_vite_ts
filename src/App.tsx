@@ -79,7 +79,7 @@ function App() {
       <AuthProvider>
         <div className="container">
           <div className="page-header">
-            <h1 className="page-title">⚾ Todo Service</h1>
+            <h1 className="page-title">🦖 Todo Service</h1>
           </div>
           <Router
             future={{
