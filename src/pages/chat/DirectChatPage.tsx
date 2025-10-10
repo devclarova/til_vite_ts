@@ -39,7 +39,7 @@ function DirectChatPage() {
     <div className="chat-page">
       {/* 메인 채팅 컨테이너 - 사이드바와 메인 영역으로 구성 */}
       <div className="chat-container">
-        {/* 왼쪽 사이드바 - 채팅 목록 표시 */}
+        {/* 왼쪽 사이드바 - 채팅 목록 표시   */}
         <div className="chat-sidebar">
           <DirectChatList
             onChatSelect={handleChatSelect} // 채팅방 선택시 호출되는 콜백 함수
@@ -52,7 +52,7 @@ function DirectChatPage() {
           {/* 선택된 채팅방 ID 유무 */}
           {selectedChatId ? (
             //  채팅방이 선택된 경우 : DirectChatRoom
-            <DirectChatRoom />
+            <DirectChatRoom chatId={selectedChatId} />
           ) : (
             // 채팅방이 선택되지 않은 경우 : 환영 화면 표시
             <div className="chat-welcome">
