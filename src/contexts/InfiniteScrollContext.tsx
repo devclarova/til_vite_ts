@@ -152,7 +152,7 @@ type InfiniteScrollContextValue = {
   totalCount: number;
   loading: boolean;
   loadingMore: boolean;
-  loadingInitialTodos: () => Promise<void>;
+  loadingIntialTodos: () => Promise<void>;
   loadMoreTodos: () => Promise<void>;
   addTodo: (title: string) => Promise<void>;
   toggleTodo: (id: number) => Promise<void>;
@@ -180,7 +180,7 @@ export const InfiniteScrollProvider: React.FC<InfiniteScrollProviderProps> = ({
   const [state, dispatch] = useReducer(reducer, initialState);
 
   // 초기 데이터 로드
-  const loadingInitialTodos = async (): Promise<void> => {
+  const loadingIntialTodos = async (): Promise<void> => {
     try {
       // 초기로딩 활성화
       dispatch({ type: InfiniteScrollActionType.SET_LOADING, payload: true });
@@ -306,7 +306,7 @@ export const InfiniteScrollProvider: React.FC<InfiniteScrollProviderProps> = ({
 
   // 최초 실행시 데이터 로드
   useEffect(() => {
-    loadingInitialTodos();
+    loadingIntialTodos();
   }, []);
 
   const value: InfiniteScrollContextValue = {
@@ -315,7 +315,7 @@ export const InfiniteScrollProvider: React.FC<InfiniteScrollProviderProps> = ({
     totalCount: state.totalCount,
     loading: state.loading,
     loadingMore: state.loadingMore,
-    loadingInitialTodos,
+    loadingIntialTodos,
     loadMoreTodos,
     addTodo,
     toggleTodo,

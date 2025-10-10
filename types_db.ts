@@ -55,19 +55,16 @@ export type Database = {
           created_at: string
           id: number
           memo: string
-          update_at: string | null
         }
         Insert: {
           created_at?: string
           id?: number
           memo: string
-          update_at?: string | null
         }
         Update: {
           created_at?: string
           id?: number
           memo?: string
-          update_at?: string | null
         }
         Relationships: []
       }

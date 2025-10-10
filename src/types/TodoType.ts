@@ -1,6 +1,6 @@
 export type TodoType = { id: string; title: string; completed: boolean };
 
-// 개발자가 직접 작성해 줌
+// 개발자가 직접 작성해 줌.
 export type Todo = Database['public']['Tables']['todos']['Row'];
 export type TodoInsert = Database['public']['Tables']['todos']['Insert'];
 export type TodoUpdate = Database['public']['Tables']['todos']['Update'];
@@ -68,19 +68,16 @@ export type Database = {
           created_at: string;
           id: number;
           memo: string;
-          update_at: string | null;
         };
         Insert: {
           created_at?: string;
           id?: number;
           memo: string;
-          update_at?: string | null;
         };
         Update: {
           created_at?: string;
           id?: number;
           memo?: string;
-          update_at?: string | null;
         };
         Relationships: [];
       };

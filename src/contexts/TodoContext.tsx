@@ -84,12 +84,13 @@ function reducer(
       return state;
   }
 }
+
 // 3. context 생성
 //  만들어진 Context 가 관리하는 Value 의 모양
 type TodoContextValue = {
   todos: Todo[];
-  totalPages: number;
   totalCount: number;
+  totalPages: number;
   currentPage: number;
   itemsPerPage: number;
   addTodo: (todo: Todo) => void;
@@ -152,7 +153,7 @@ export const TodoProvider: React.FC<TodoProviderProps> = ({
   //     console.log(error);
   //   }
   // };
-  const loadTodos = async (page: number, limit: number): Promise<any> => {
+  const loadTodos = async (page: number, limit: number): Promise<void> => {
     try {
       const result = await getTodosPaginated(page, limit);
       // 현재 페이지가 비어있고 첫 페이지가 아니라면 이전 페이지를 출력하자.
@@ -175,7 +176,7 @@ export const TodoProvider: React.FC<TodoProviderProps> = ({
   // 페이지가 바뀌면 다시 실행하도록 해야 한다.
   useEffect(() => {
     loadTodos(currentPage, limit);
-  }, [currentPage]);
+  }, [currentPage, limit]);
 
   // value 전달할 값
   const value: TodoContextValue = {

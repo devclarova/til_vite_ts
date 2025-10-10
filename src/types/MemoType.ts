@@ -1,6 +1,6 @@
-export type MemoType = { id: string; create_at: string; memo: string };
+export type TodoType = { id: string; title: string; completed: boolean };
 
-// 직접 작성
+// 개발자가 직접 작성해 줌.
 export type Memo = Database['public']['Tables']['memos']['Row'];
 export type MemoInsert = Database['public']['Tables']['memos']['Insert'];
 export type MemoUpdate = Database['public']['Tables']['memos']['Update'];
@@ -56,19 +56,16 @@ export type Database = {
           created_at: string;
           id: number;
           memo: string;
-          update_at: string | null;
         };
         Insert: {
           created_at?: string;
           id?: number;
           memo: string;
-          update_at?: string | null;
         };
         Update: {
           created_at?: string;
           id?: number;
           memo?: string;
-          update_at?: string | null;
         };
         Relationships: [];
       };

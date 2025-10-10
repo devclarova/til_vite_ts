@@ -188,7 +188,7 @@ function TodoDetailPage() {
             marginBottom: 'var(--space-4)',
           }}
         >
-          <h4 style={{ margin: '0 0 var(--space-3) 0', color: 'var(--gray-700)' }}>할일 정보</h4>
+          <h4 style={{ margin: '0 0 var(--space-3) 0', color: 'var(--gray-700)' }}>할 일 정보</h4>
           <div
             style={{
               display: 'grid',
@@ -197,19 +197,19 @@ function TodoDetailPage() {
             }}
           >
             <div>
-              <span style={{ fontWeight: '500', color: 'var(--gray-600)' }}>작성일: </span>
+              <span style={{ fontWeight: '500', color: 'var(--gray-600)' }}>작성일 : </span>
               <div style={{ color: 'var(--gray-600)', marginTop: 'var(--space-1)' }}>
                 {todo.created_at ? new Date(todo.created_at).toLocaleString('ko-KR') : '정보 없음'}
               </div>
             </div>
             <div>
-              <span style={{ fontWeight: '500', color: 'var(--gray-600)' }}>수정일: </span>
+              <span style={{ fontWeight: '500', color: 'var(--gray-600)' }}>수정 : </span>
               <div style={{ color: 'var(--gray-600)', marginTop: 'var(--space-1)' }}>
                 {todo.updated_at ? new Date(todo.updated_at).toLocaleString('ko-KR') : '정보 없음'}
               </div>
             </div>
             <div>
-              <span style={{ fontWeight: '500', color: 'var(--gray-600)' }}>작성자: </span>
+              <span style={{ fontWeight: '500', color: 'var(--gray-600)' }}>작성 : </span>
               <div style={{ color: 'var(--gray-600)', marginTop: 'var(--space-1)' }}>
                 {profile?.nickname || user?.email}
               </div>

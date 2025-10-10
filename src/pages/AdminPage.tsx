@@ -13,11 +13,11 @@ function AdminPage() {
   const [loading, setLoading] = useState(true);
 
   // 관리자 확인
-  const isAdmin = user?.email === 'azsx7111@naver.com';
+  const isAdmin = user?.email === 'wldjsjiun@naver.com';
   useEffect(() => {
-    console.log(user?.email);
-    console.log(user?.id);
-    console.log(user);
+    // console.log(user?.email);
+    // console.log(user?.id);
+    // console.log(user);
   }, [user]);
 
   // 컴포넌트가 완료가 되었을 때, isAdmin 을 체크 후 실행
@@ -109,7 +109,7 @@ function AdminPage() {
   }
   // 2. 로딩중 이라면
   if (loading) {
-    return <Loading message="관리자데이터를 불러오는 중 ..." size="lg" />;
+    return <Loading message="관리자데이터를 불러오는 중..." />;
   }
 
   // tsx 자리
@@ -124,7 +124,6 @@ function AdminPage() {
         <h3 style={{ marginBottom: 'var(--space-4)', color: 'var(--gray-800)' }}>
           📋 삭제 요청 목록
         </h3>
-
         {deleteRequests.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 'var(--space-8)' }}>
             <div style={{ fontSize: '3rem', marginBottom: 'var(--space-4)' }}>✅</div>
@@ -154,7 +153,7 @@ function AdminPage() {
                   </div>
                   <div className="admin-detail-row">
                     <span className="admin-detail-label">삭제 사유:</span>
-                    <span className="admin-detail-value">{item.reason}</span>
+                    <span className="admin-detail-value"> {item.reason}</span>
                   </div>
                 </div>
                 {/* 액션들 */}

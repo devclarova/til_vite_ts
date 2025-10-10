@@ -1,13 +1,14 @@
 import React from 'react';
 import { Wallet } from '../components/shop/Wallet';
 
-const WalletPage = () => {
+function WalletPage() {
   const box: React.CSSProperties = {
-    border: '2px solid #eee',
-    borderRadius: 12,
     padding: 16,
-    marginBottom: 20,
-    background: '#fff',
+    border: '1px solid #e5e7eb',
+    borderRadius: 12,
+    background: '#fafafa',
+    marginTop: 12,
+    textAlign: 'center',
   };
   return (
     <div style={box}>
@@ -17,6 +18,6 @@ const WalletPage = () => {
       </div>
     </div>
   );
-};
+}
 
 export default WalletPage;

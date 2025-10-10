@@ -1,13 +1,14 @@
 import React from 'react';
 import Cart from '../components/shop/Cart';
 
-const CartPage = () => {
+function CartPage() {
   const box: React.CSSProperties = {
-    border: '2px solid #eee',
-    borderRadius: 12,
     padding: 16,
-    marginBottom: 20,
-    background: '#fff',
+    border: '1px solid #e5e7eb',
+    borderRadius: 12,
+    background: '#fafafa',
+    marginTop: 12,
+    textAlign: 'center',
   };
   return (
     <div style={box}>
@@ -17,6 +18,6 @@ const CartPage = () => {
       </div>
     </div>
   );
-};
+}
 
 export default CartPage;
